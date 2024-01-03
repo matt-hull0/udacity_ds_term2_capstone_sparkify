@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "udacity-ds-term2-capstone-sparkify"
+version = "0.1.0"
+description = ""
+authors = ["Matthew.Hull"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.9"
+ydata-profiling = "^4.3.1"
+databricks-connect = "~11.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
