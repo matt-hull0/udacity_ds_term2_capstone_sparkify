@@ -1,0 +1,9 @@
+ª   .gitignore
+ª   blogpost.txt
+ª   notebook.ipynb
+ª   poetry.lock
+ª   poetry.toml
+ª   pyproject.toml
+ª   README.md
+ª   tree.txt 
++---blog_post_materials

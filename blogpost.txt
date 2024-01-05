@@ -1,0 +1,130 @@
+
+# Overview 
+
+This article covers the work done for the Data Scientist Capstone project as a part of term 2 of the Udacity Data Science Nano Degree program.
+
+I chose to work on the project based around the fictional music streaming service, "Sparkify", where we are tasked to identify users that are likely to churn. This is a typical task within the data science domain, so that action can be taken to retain customers, in this case as either users of the paid subscription, or free service, which still brings in revenue through advertising.
+
+Using Spark, running on a databricks cluser on Mircrsofts Azure services, I was able to analyse the full 12Gb input file provided by Udacity. The data covers interactions users have with the service, such as logging up, up/down grading their accounts, and of course listening to songs.
+
+# Problem Statement
+
+Predict which users are likely to churn. We were given freedom on the definition of churn, in terms of is it users leaving the service altogether, downgrading their accounts from the paid service to the free once etc. I chose to predict users likely to downgrade their accounts, with the justification explained during the data exploration steps below.
+
+## The Code
+
+The code used in this project can be found on (github here)[].
+
+# Data exploration
+
+The full 12Gb dataset was loaded into spark. I made use of a useful library (ydata_profiling) to generate a report providing a description of the dataframe and key metrics for each of the columns (e.g. number of missing values, min/max/average for numerical columns, most common values for categorical etc.)
+
+The columns in the data include: (copied from https://www.kaggle.com/code/yukinagae/sparkify-project-churn-prediction)
+artist: Artist name (ex. Daft Punk) \
+auth: User authentication status (ex. Logged) \
+firstName: User first name (ex. Colin) \
+gender: Gender (ex. F or M) \
+itemInSession: Item count in a session (ex. 52) \
+lastName: User last name (ex. Freeman) \
+length: Length of song (ex. 223.60771) \
+level: User plan (ex. paid) \
+location: User's location (ex. Bakersfield \)
+method: HTTP method (ex. PUT) \
+page: Page name (ex. NextSong) \
+registration: Registration timestamp (unix timestamp) (ex. 1538173362000) \
+sessionId: Session ID (ex. 29) \
+song: Song (ex. Harder Better Faster Stronger) \
+status: HTTP status (ex. 200) \
+ts: Event timestamp(unix timestamp) (ex. 1538352676000) \
+userAgent: User's browswer agent (ex. Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0) \
+userId: User ID (ex. 30) \
+
+
+My key takeaways from the report were:
+ - 26_259_199 rows
+ - 18 columns
+ - 14_710_249
+
+- no duplicate rows
+
+  ### Columns:
+
+  - artist - missing values, to be expected when the interaction doesn't involve a song (e.g. logging in)
+  - firstName - missing 778_479 values (note originally thought was 14_562_194 values but ydata report is confusing / bugged - see below)
+  - gender - missing 778_479 (3%) of values
+  - lastName - missing 778_479 values (note originally thought was 12_948_838 values but ydata report is confusing / bugged - see below)
+  - level - 2 distinct values (paid / free), no missing - the majority (78%) are paid
+  - location - has missing values. Most popular locations seem to be in USA
+  - page - 22 distinct values, none missing. Most visited page is "NextSong"
+  - registration - no missing values, but some at 0 which will need to be checked / cleaned up
+  - status - none missing, 3 distinct values: 200 (OK), 307 (Temporary Redirect), 404 (NOT FOUND)
+  - ts - none missing, don't have the same "zeros" issue as registrations
+  - userId - none missing, but one very common value (1261737). More checks might be required (e.g. for empty string)
+
+
+ side note for the negotiating team - our most played artists are Kings of Leon and Coldplay so don't lose the rights to play their songs!
+
+
+# Cleaning Up the Data
+
+I removed a user (1261737) that generated a lot of null data, specificailly the columns with 778,479 missing values you can see in my key takeaways above, which seemed to be the userId assigned to guests/those logged out.
+
+# Choosing My Churn definition
+In the profile report, we see most interactions are on the "paid" level. Whilst this does not necessarily mean that there are more paying users, as a smaller number of paying users might just use it more than their non-paying counter-parts. Due to the large discrepancy I thought it was likely but ran some code to check, and found out of a total of 22,278 unique users, 12082 (54%) have, or have had a paid level account at some point. Wanting to keep that steady stream of revenue and not rely on users listening to the adverts to bring in revenue, I decided to focus on predicting users that will leave the paid level, either to the free level or close their account entirely.
+
+
+# Transforming the Data
+
+I filtered the data down to those users that upgraded, and noticed many had switched between the free and paid levels multiple times (i.e. had churned multiple times). In fact one user had done so as many as 8 times across the time perdiod provided! As this gave the opportunity to increase and improve our training data, by extracting the different time periods they were paid users.
+
+Using the powerful `Window` feature available in Spark, I was able to assign a "phase" to each period a user was in the paid level.
+
+This identified the need for further data cleaning, as for some users they downgraded their account before upgrading. Not knowing how much of their interactions we would be missing to train our models on I filtered out those periods, keeping only the data after the first "Submit Upgrade" interaction.
+
+I then filtered the data to keep only the interactions during the paid periods, as it is the churn of paying users I am looking to predict. I found:
+
+Number of "paying periods" in data: 15135
+Number of "churns" from paid to free/cancelled in data: 7518
+Number of paying periods that didn't churn: 7617 
+Number of unique users in the data: 12082
+
+# Looking for Features
+
+I brainstormed the features to look at and came up with:
+ - Number of unique artists listened  (ever / over a period)
+ - gender column
+ - itemInSession column
+ - Many from the pages column:
+    - number of songs played (ever / over a period)
+    - number of thumbs up (ever / over a period) 
+    - number of thumbs down (ever / over a period)
+    - number of visits to the downgrade and or cancel page (ever / over a period)
+    - number of visits to the help page
+    - number of HTTP errors (404 codes)
+ - Number of times the user has churned previously
+
+ For each of these I calculated metric(s) for all the "paying periods" I had generated. For a full breakdown refer to the notebook linked in GitHub above, in this article I would like to highlight the most interesting observations I made:
+
+ 1) Distinct Count of the number of artists listened to
+Below is a violin plot showing the distribution of the number of unique artists that were listened to during each "paying period", split on if they churned or not. It seems both populations (churned/not churned) have similar distributions initially both peaking around 200 unique artists, however as the number of unique artists increases, those that didn't churn look to be more likely than those that did. This makes sense and could be for several reasons (those that haven't churned have had accounts longer, giving more time to experience new and different music, churned users could have got bored to what they were listening to so and decided to leave etc.) The explanation behind this could be an interesting data science question to provide insights in the future.
+
+ 2)  Users that churn give both fewer thumbs up, and thumbs down
+
+ It could be down to the next song recommendation engine (assuming there is one) doing a good job when users provide that feedback. Could be an idea to suggest users provide feedback on songs to help them discover new music they may like!
+
+ 3) Users do not seem to be put off from receiving errors
+    In total there were 14,720 error events in the data, and you can see in the box plots the numbers of errors experienced by non-churned users is higher than those that churned. This could also be down to non-churning users having the service for longer, hence more time to build up errors.
+
+With more time, many of the features I have investigated I would generate additional columns for, comparing the counts of the each interaction over a recent time period (e.g. week / month) and compare it to the total count of the paid period. This would then do a better job of identifying a change in trend, e.g. if suddenly started to experience more errors than normal or listen to fewer songs, both of which could be indications someone is more likely to churn.
+
+
+# Reflection
+
+Time consuming nature working with 12Gb of data, simple queries often taking 5 minutes to run. Made iterating the spark commands to generate my desired outputs time consuming, so next time should start with a smaller subset of the data first to get a good starting point. And then repeat and add to the analysis with any further insights / requirements identified using the full data. 
+
+# Improvement
+
+As described above, add features that compare "recent" activity and compare it to the average, to try and detect change in behaviours that might be predictors of a user churning (e.g. receving more errors per day on average in the previous 1 week compared to normal).
+
+
+
