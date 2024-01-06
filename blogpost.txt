@@ -1,19 +1,23 @@
+Predicting User Churn using Spark
+
+img
+Sparkify logo taken from Slide 12 of the Data Scientist Capstone project on Udacity.
 
 # Overview 
 
 This article covers the work done for the Data Scientist Capstone project as a part of term 2 of the Udacity Data Science Nano Degree program.
 
-I chose to work on the project based around the fictional music streaming service, "Sparkify", where we are tasked to identify users that are likely to churn. This is a typical task within the data science domain, so that action can be taken to retain customers, in this case as either users of the paid subscription, or free service, which still brings in revenue through advertising.
+I chose to work on the project based around the fictional music streaming service, "Sparkify", where we are tasked to identify users that are likely to churn. This is a typical task within the data science domain, so that action can be taken to retain customers, in this case as either users of the paid subscription, or free service, which still brings in revenue through advertising. I specifically chose this project as spark had not been covered in the nanodegree up to now, whilst it is used at my place of work so I was keen to improve my knowledge.
 
-Using Spark, running on a databricks cluser on Mircrsofts Azure services, I was able to analyse the full 12Gb input file provided by Udacity. The data covers interactions users have with the service, such as logging up, up/down grading their accounts, and of course listening to songs.
+Using Spark, running on a databricks cluster on Microsofts Azure services, I was able to analyse the full 12Gb input file provided by Udacity. The data covers interactions users have with the service, such as logging up, up/down grading their accounts, and of course listening to songs.
 
 # Problem Statement
 
-Predict which users are likely to churn. We were given freedom on the definition of churn, in terms of is it users leaving the service altogether, downgrading their accounts from the paid service to the free once etc. I chose to predict users likely to downgrade their accounts, with the justification explained during the data exploration steps below.
+The task was to predict which users are likely to churn. We were given freedom on the definition of churn, in terms of whether it is users leaving the service altogether, downgrading their accounts from the paid service to the free once etc. I chose to predict users likely to downgrade their accounts, with the justification explained during the data exploration steps below.
 
 ## The Code
 
-The code used in this project can be found on (github here)[].
+The code used in this project can be found on (github here)[https://github.com/matt-hull0/udacity_ds_term2_capstone_sparkify].
 
 # Data exploration
 
@@ -67,7 +71,7 @@ My key takeaways from the report were:
 
 # Cleaning Up the Data
 
-I removed a user (1261737) that generated a lot of null data, specificailly the columns with 778,479 missing values you can see in my key takeaways above, which seemed to be the userId assigned to guests/those logged out.
+I removed a user (1261737) that generated a lot of null data, specifically the columns with 778,479 missing values you can see in my key takeaways above, which seemed to be the userId assigned to guests/those logged out.
 
 # Choosing My Churn definition
 In the profile report, we see most interactions are on the "paid" level. Whilst this does not necessarily mean that there are more paying users, as a smaller number of paying users might just use it more than their non-paying counter-parts. Due to the large discrepancy I thought it was likely but ran some code to check, and found out of a total of 22,278 unique users, 12082 (54%) have, or have had a paid level account at some point. Wanting to keep that steady stream of revenue and not rely on users listening to the adverts to bring in revenue, I decided to focus on predicting users that will leave the paid level, either to the free level or close their account entirely.
@@ -75,9 +79,20 @@ In the profile report, we see most interactions are on the "paid" level. Whilst 
 
 # Transforming the Data
 
-I filtered the data down to those users that upgraded, and noticed many had switched between the free and paid levels multiple times (i.e. had churned multiple times). In fact one user had done so as many as 8 times across the time perdiod provided! As this gave the opportunity to increase and improve our training data, by extracting the different time periods they were paid users.
+I filtered the data down to those users that upgraded, and noticed many had switched between the free and paid levels multiple times (i.e. had churned multiple times). In fact one user had done so as many as 8 times across the time period provided! As this gave the opportunity to increase and improve our training data, by extracting the different time periods they were paid users, that is what I did.
 
-Using the powerful `Window` feature available in Spark, I was able to assign a "phase" to each period a user was in the paid level.
+Using the powerful `Window` feature available in Spark, I was able to assign a "phase" to each period a user was in the paid level. The key code is extracted below:
+
+```
+df = df.withColumn("level_change",
+    f.when(f.col("page")=="Submit Upgrade", 1)
+    .when(f.col("page")=="Submit Downgrade", -1)
+    .when(f.col("page")=="Cancellation Confirmation", -1)
+    .otherwise(0))
+
+window = Window.partitionBy("userId").orderBy(f.asc("ts")).rangeBetween(Window.unboundedPreceding, Window.currentRow)
+df = df.withColumn("level_phase", f.sum("level_change").over(window))
+```
 
 This identified the need for further data cleaning, as for some users they downgraded their account before upgrading. Not knowing how much of their interactions we would be missing to train our models on I filtered out those periods, keeping only the data after the first "Submit Upgrade" interaction.
 
@@ -125,6 +140,7 @@ Time consuming nature working with 12Gb of data, simple queries often taking 5 m
 # Improvement
 
 As described above, add features that compare "recent" activity and compare it to the average, to try and detect change in behaviours that might be predictors of a user churning (e.g. receving more errors per day on average in the previous 1 week compared to normal).
+
 
 
 
