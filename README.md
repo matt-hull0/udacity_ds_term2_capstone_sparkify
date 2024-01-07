@@ -1,5 +1,15 @@
 # Project Overview
 
+A blog post covering the work done on this project can be found here:
+https://medium.com/@matthewhull55/predicting-user-churn-using-spark-08f892c55393
+
+This repo covers my work done for the Data Scientist Capstone project as a part of term 2 of the Udacity Data Science Nano Degree program.
+
+I chose to work on the project based around the fictional music streaming service, “Sparkify”, where we are tasked to identify users that are likely to churn. This is a typical task within the data science domain, so that action can be taken to retain (such as offering a discount) the customers. In this case we could choose to look at either users of the paid subscription, or the free service, which still brings in revenue through advertising. I specifically chose this project as spark had not been covered in the Nanodegree up to now, whilst it is used at my place of work so I was keen to improve my knowledge.
+
+Using Spark, running on a databricks cluster on Microsofts Azure services, I was able to analyse the full 12Gb input file provided by Udacity. The data covers interactions users have with the service, such as logging up, up/down grading their accounts, and of course listening to songs.
+
+I performed exploratory analysis on the data, then from those insights cleaned it and generated features which were passed to cross validation pipelines for two different types of models with different hyper-parameters to tune. The best model was found from my selections, the results of which are presented in the notebook in this repository and reviewed in my blog post linked above.
 
 # Libraries Used:
 ```
@@ -20,7 +30,7 @@ Refer to the poetry.lock file for the exact versions of all libraries (including
 
 ```bash
 ª   .gitignore
-ª   blogpost.txt - content used on the blog post hosted on Medium
+ª   blogpost.txt - draft of the content used on the blog post hosted on Medium
 ª   notebook.ipynb - Jupyter notebook with all the code and analysis
 ª   poetry.lock - file used by Poetry package manager
 ª   poetry.toml - file used to specify poetry config
@@ -33,7 +43,7 @@ Refer to the poetry.lock file for the exact versions of all libraries (including
 Pre-requisites
  -  `poetry` package manager
  - A databricks environment setup connected with databricks-connect
- - A databricks cluster running 11.3
+ - A databricks cluster running 11.3 ML
 
 ```
 poetry install

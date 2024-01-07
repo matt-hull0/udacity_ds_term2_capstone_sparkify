@@ -1,3 +1,5 @@
+This is the draft text for the blog post, and was improved / added to when migrated to Medium
+
 Predicting User Churn using Spark
 
 img
@@ -5,11 +7,13 @@ Sparkify logo taken from Slide 12 of the Data Scientist Capstone project on Udac
 
 # Overview 
 
-This article covers the work done for the Data Scientist Capstone project as a part of term 2 of the Udacity Data Science Nano Degree program.
+This article covers my work done for the Data Scientist Capstone project as a part of term 2 of the Udacity Data Science Nano Degree program.
 
-I chose to work on the project based around the fictional music streaming service, "Sparkify", where we are tasked to identify users that are likely to churn. This is a typical task within the data science domain, so that action can be taken to retain customers, in this case as either users of the paid subscription, or free service, which still brings in revenue through advertising. I specifically chose this project as spark had not been covered in the nanodegree up to now, whilst it is used at my place of work so I was keen to improve my knowledge.
+I chose to work on the project based around the fictional music streaming service, "Sparkify", where we are tasked to identify users that are likely to churn. This is a typical task within the data science domain, so that action can be taken to retain  (such as offering a discount) the customers. In this case we could choose to look at either users of the paid subscription, or the free service, which still brings in revenue through advertising. I specifically chose this project as spark had not been covered in the Nanodegree up to now, whilst it is used at my place of work so I was keen to improve my knowledge.
 
 Using Spark, running on a databricks cluster on Microsofts Azure services, I was able to analyse the full 12Gb input file provided by Udacity. The data covers interactions users have with the service, such as logging up, up/down grading their accounts, and of course listening to songs.
+
+I performed exploratory analysis on the data, then from those insights cleaned it and generated features which were passed to cross validation pipelines for two different types of models with different hyper-parameters to tune. The best model was found from my limited selections, the results of which are presented below.
 
 # Problem Statement
 
@@ -17,11 +21,11 @@ The task was to predict which users are likely to churn. We were given freedom o
 
 ## The Code
 
-The code used in this project can be found on (github here)[https://github.com/matt-hull0/udacity_ds_term2_capstone_sparkify].
+The code used in this project can be found on my GitHub here: https://github.com/matt-hull0/udacity_ds_term2_capstone_sparkify
 
 # Data exploration
 
-The full 12Gb dataset was loaded into spark. I made use of a useful library (ydata_profiling) to generate a report providing a description of the dataframe and key metrics for each of the columns (e.g. number of missing values, min/max/average for numerical columns, most common values for categorical etc.)
+The full 12Gb dataset made available by Udacity was loaded into spark. I utilised of a useful library (ydata_profiling) to generate a report providing a description of the dataframe and key metrics for each of the columns (e.g. number of missing values, min/max/average for numerical columns, most common values for categorical etc.)
 
 The columns in the data include: (copied from https://www.kaggle.com/code/yukinagae/sparkify-project-churn-prediction)
 artist: Artist name (ex. Daft Punk) \
@@ -42,6 +46,26 @@ status: HTTP status (ex. 200) \
 ts: Event timestamp(unix timestamp) (ex. 1538352676000) \
 userAgent: User's browswer agent (ex. Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0) \
 userId: User ID (ex. 30) \
+
+The columns in the data include: (copied from https://www.kaggle.com/code/yukinagae/sparkify-project-churn-prediction)
+artist: Artist name (ex. Daft Punk) 
+auth: User authentication status (ex. Logged) 
+firstName: User first name (ex. Colin) 
+gender: Gender (ex. F or M) 
+itemInSession: Item count in a session (ex. 52) 
+lastName: User last name (ex. Freeman) 
+length: Length of song (ex. 223.60771) 
+level: User plan (ex. paid) 
+location: User's location (ex. Bakersfield \
+method: HTTP method (ex. PUT) 
+page: Page name (ex. NextSong) 
+registration: Registration timestamp (unix timestamp) (ex. 1538173362000) 
+sessionId: Session ID (ex. 29) 
+song: Song (ex. Harder Better Faster Stronger) 
+status: HTTP status (ex. 200) 
+ts: Event timestamp(unix timestamp) (ex. 1538352676000) 
+userAgent: User's browswer agent (ex. Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0) 
+userId: User ID (ex. 30)
 
 
 My key takeaways from the report were:
@@ -79,7 +103,7 @@ In the profile report, we see most interactions are on the "paid" level. Whilst 
 
 # Transforming the Data
 
-I filtered the data down to those users that upgraded, and noticed many had switched between the free and paid levels multiple times (i.e. had churned multiple times). In fact one user had done so as many as 8 times across the time period provided! As this gave the opportunity to increase and improve our training data, by extracting the different time periods they were paid users, that is what I did.
+I filtered the data down to those users that upgraded, and noticed many had switched between the free and paid levels multiple times (i.e. had churned multiple times). In fact one user had done so as many as 8 times across the time period provided! As this gave the opportunity to increase and improve our training data, by extracting the different time periods they were paid users, that is what I did. This way we train our models on what actions users take while paying, and not while on the free service which could be quite different.
 
 Using the powerful `Window` feature available in Spark, I was able to assign a "phase" to each period a user was in the paid level. The key code is extracted below:
 
