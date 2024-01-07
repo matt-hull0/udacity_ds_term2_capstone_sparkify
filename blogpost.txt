@@ -118,6 +118,10 @@ I brainstormed the features to look at and came up with:
     - number of HTTP errors (404 codes)
  - Number of times the user has churned previously
 
+ In order to be able to look at users behavior just prior to churning, and compare it to their overall behavior, I extracted user interactions for the last week in which they were on the paying level, and compared the average "rate" of the different type of interactions listed above for that final week compared to the whole duration they were on the paid level. For example if someone typically listened to 50 songs a day, but in the last week only listened to 10 a day, the ratio would be approx. 20%. (approx as the final week brings down the average over the total period too.)
+
+Hence I also added a new feature - "duration at the paid level", which had the distributions below, comparing churned to not churned.
+
  For each of these I calculated metric(s) for all the "paying periods" I had generated. For a full breakdown refer to the notebook linked in GitHub above, in this article I would like to highlight the most interesting observations I made:
 
  1) Distinct Count of the number of artists listened to
