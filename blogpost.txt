@@ -136,6 +136,21 @@ Below is a violin plot showing the distribution of the number of unique artists 
 
 With more time, many of the features I have investigated I would generate additional columns for, comparing the counts of the each interaction over a recent time period (e.g. week / month) and compare it to the total count of the paid period. This would then do a better job of identifying a change in trend, e.g. if suddenly started to experience more errors than normal or listen to fewer songs, both of which could be indications someone is more likely to churn.
 
+# Modelling
+
+## Pre-processing
+
+## Implementation
+
+## Refinement?
+
+## Table of results
+
+
+## Justify Metrics
+
+
+
 
 # Reflection
 
